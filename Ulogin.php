@@ -60,12 +60,21 @@ function fnUloginAuthenticateHook($user, &$result)
 
                 //die( var_dump($user['profile']) );
 
+                $isNew = true;
+
                 $u = User::newFromName($username);
+                if( $u->getId() != 0 ) {
+                    $isNew = false;
+                }
+                if( LinkedInData::userFromLinkedinId( $u ) ) {
+                    $u = User::newFromId( LinkedInData::userFromLinkedinId( $u ) );
+                    $isNew = false;
+                }
 
                 require_once("$IP/includes/WebStart.php");
 
                 //Create new user if not exists
-                if ($u->getId() == 0) {
+                if ($isNew) {
 
                     $u->addToDatabase();
                     $u->setRealName($user['first_name'] . ' ' . $user['last_name']);
@@ -88,7 +97,6 @@ function fnUloginAuthenticateHook($user, &$result)
                 //Redirect to access token request
                 LinkedInData::requestUserToken();
                 //$wgOut->redirect(Title::newMainPage()->getFullUrl());
-                LinkedInData::updateConnections( $user );
 
             }
         }
